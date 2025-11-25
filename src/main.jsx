@@ -192,18 +192,17 @@ const initialTripData = [
         activities: [
             { id: 1801, time: "10:00", title: "Onsen Hopping", cost: 2000, type: "sightseeing", notes: "Iiyama-Yutaki, Togari, Madarao-Kogen" }
         ]
-    }
     },
-{
-    id: 19,
+    {
+        id: 19,
         date: "2025-12-26",
-            day: "Day 19",
-                location: "Tokyo",
-                    lat: 35.6762, lng: 139.6503,
-                        activities: [
-                            { id: 1901, time: "10:00", title: "Depart Japan", cost: 0, type: "transport", notes: "Fly home" }
-                        ]
-}
+        day: "Day 19",
+        location: "Tokyo",
+        lat: 35.6762, lng: 139.6503,
+        activities: [
+            { id: 1901, time: "10:00", title: "Depart Japan", cost: 0, type: "transport", notes: "Fly home" }
+        ]
+    }
 ];
 
 // --- Components ---
