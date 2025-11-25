@@ -284,6 +284,10 @@ const App = () => {
         localStorage.setItem('japanTripData_v2', JSON.stringify(tripData));
     }, [tripData]);
 
+    useEffect(() => {
+        if (window.lucide) window.lucide.createIcons();
+    }, [tripData, selectedDayId, activeTip]);
+
     const calculateTotalCost = () => {
         return tripData.reduce((total, day) => {
             return total + day.activities.reduce((dayTotal, act) => dayTotal + (Number(act.cost) || 0), 0);
@@ -458,7 +462,7 @@ const App = () => {
                                                                 </div>
                                                                 <button
                                                                     onClick={() => deleteActivity(day.id, activity.id)}
-                                                                    className="text-slate-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    className="text-slate-400 hover:text-red-500 p-1 transition-colors"
                                                                     title="Delete Activity"
                                                                 >
                                                                     <i data-lucide="trash-2" className="w-4 h-4"></i>
