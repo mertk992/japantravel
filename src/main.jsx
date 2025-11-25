@@ -193,6 +193,17 @@ const initialTripData = [
             { id: 1801, time: "10:00", title: "Onsen Hopping", cost: 2000, type: "sightseeing", notes: "Iiyama-Yutaki, Togari, Madarao-Kogen" }
         ]
     }
+    },
+{
+    id: 19,
+        date: "2025-12-26",
+            day: "Day 19",
+                location: "Tokyo",
+                    lat: 35.6762, lng: 139.6503,
+                        activities: [
+                            { id: 1901, time: "10:00", title: "Depart Japan", cost: 0, type: "transport", notes: "Fly home" }
+                        ]
+}
 ];
 
 // --- Components ---
@@ -308,6 +319,13 @@ const App = () => {
         }));
     };
 
+    const updateDay = (dayId, field, value) => {
+        setTripData(prev => prev.map(day => {
+            if (day.id !== dayId) return day;
+            return { ...day, [field]: value };
+        }));
+    };
+
     const addActivity = (dayId) => {
         setTripData(prev => prev.map(day => {
             if (day.id !== dayId) return day;
@@ -409,7 +427,13 @@ const App = () => {
                                             {day.day}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-slate-800">{day.location}</h3>
+                                            <input
+                                                type="text"
+                                                value={day.location}
+                                                onChange={(e) => updateDay(day.id, 'location', e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="font-bold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-japan-indigo focus:outline-none w-full"
+                                            />
                                             <p className="text-xs text-slate-500">{day.date}</p>
                                         </div>
                                     </div>
