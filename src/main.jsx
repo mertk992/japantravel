@@ -282,7 +282,7 @@ const SnowEffect = () => {
 
 const App = () => {
     const [tripData, setTripData] = useState(() => {
-        const saved = localStorage.getItem('japanTripData_v2');
+        const saved = localStorage.getItem('japanTripData_v3');
         return saved ? JSON.parse(saved) : initialTripData;
     });
 
@@ -291,7 +291,7 @@ const App = () => {
     const [activeTip, setActiveTip] = useState(null);
 
     useEffect(() => {
-        localStorage.setItem('japanTripData_v2', JSON.stringify(tripData));
+        localStorage.setItem('japanTripData_v3', JSON.stringify(tripData));
     }, [tripData]);
 
     useEffect(() => {
@@ -417,7 +417,7 @@ const App = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
                                 className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 ${selectedDayId === day.id ? 'ring-2 ring-japan-indigo shadow-md' : 'hover:shadow-md'}`}
-                                onClick={() => setSelectedDayId(day.id)}
+                                onClick={() => setSelectedDayId(selectedDayId === day.id ? null : day.id)}
                             >
                                 {/* Day Header */}
                                 <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex justify-between items-center cursor-pointer">
