@@ -246,11 +246,14 @@ const SnowEffect = () => {
             {[...Array(20)].map((_, i) => (
                 <div
                     key={i}
-                    className="absolute bg-white rounded-full opacity-60 animate-fall"
+                    className="absolute bg-white rounded-full opacity-60"
                     style={{
                         width: Math.random() * 5 + 2 + 'px',
                         height: Math.random() * 5 + 2 + 'px',
                         left: Math.random() * 100 + 'vw',
+                        animationName: 'fall',
+                        animationTimingFunction: 'linear',
+                        animationIterationCount: 'infinite',
                         animationDuration: Math.random() * 5 + 5 + 's',
                         animationDelay: Math.random() * 5 + 's'
                     }}
