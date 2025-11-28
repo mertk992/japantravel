@@ -516,13 +516,22 @@ const App = () => {
                                                             )}
                                                         </div>
 
-                                                        <input
-                                                            type="text"
-                                                            value={activity.notes}
-                                                            onChange={(e) => updateActivity(day.id, activity.id, 'notes', e.target.value)}
-                                                            className="text-sm text-slate-500 italic bg-transparent border-b border-transparent hover:border-slate-200 focus:border-japan-indigo focus:outline-none w-full placeholder:text-slate-300"
-                                                            placeholder="Add notes..."
-                                                        />
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <input
+                                                                type="text"
+                                                                value={activity.notes}
+                                                                onChange={(e) => updateActivity(day.id, activity.id, 'notes', e.target.value)}
+                                                                className="text-sm text-slate-500 italic bg-transparent border-b border-transparent hover:border-slate-200 focus:border-japan-indigo focus:outline-none w-full placeholder:text-slate-300"
+                                                                placeholder="Add notes..."
+                                                            />
+                                                            <button
+                                                                onClick={() => navigator.clipboard.writeText(activity.notes)}
+                                                                className="text-slate-300 hover:text-japan-indigo p-1 transition-colors"
+                                                                title="Copy Notes"
+                                                            >
+                                                                <i data-lucide="copy" className="w-4 h-4"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
