@@ -449,7 +449,7 @@ const App = () => {
 
                                 {/* Activities (Expanded View) */}
                                 {selectedDayId === day.id && (
-                                    <div className="divide-y divide-slate-50">
+                                    <div className="divide-y divide-slate-50" onClick={(e) => e.stopPropagation()}>
                                         {day.activities.map(activity => (
                                             <div key={activity.id} className="p-4 hover:bg-slate-50 transition-colors group">
                                                 <div className="flex gap-4 items-start">
