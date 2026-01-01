@@ -73,42 +73,7 @@ const PhotoCard = ({ src, index }) => {
     );
 };
 
-const PhotoSelectorModal = ({ isOpen, onClose, onSelect }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur flex items-center justify-center p-6">
-            <div className="w-full max-w-5xl h-[80vh] flex flex-col">
-                <div className="flex justify-between items-center mb-8">
-                    <h3 className="font-serif text-2xl font-bold text-stone-900">Select a Photo</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-stone-100 rounded-full">
-                        <i data-lucide="x" className="w-6 h-6 text-stone-500"></i>
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto grid grid-cols-3 md:grid-cols-5 gap-4 p-4 border border-stone-200 bg-stone-50">
-                    {initialPhotos.map((photo) => (
-                        <button
-                            key={photo}
-                            onClick={() => onSelect(photo)}
-                            className="aspect-square relative group overflow-hidden border border-stone-200 hover:border-amber-700 hover:ring-2 hover:ring-amber-700/50 transition-all"
-                        >
-                            <img
-                                src={`./photos/${photo}`}
-                                className="w-full h-full object-cover filter saturate-[0.8] group-hover:saturate-100"
-                            />
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const LogCard = ({ item, onActivate, userNotes, onNoteChange, dayPhotos, onPhotoSlotClick }) => {
-    // dayPhotos is array of 3 strings or nulls, e.g. [null, 'DSC123.jpg', null]
-    const slots = [0, 1, 2];
-
+const LogCard = ({ item, onActivate, userNotes, onNoteChange }) => {
     return (
         <motion.div
             onViewportEnter={() => onActivate(item)}
@@ -120,38 +85,6 @@ const LogCard = ({ item, onActivate, userNotes, onNoteChange, dayPhotos, onPhoto
             <div className="mb-6">
                 <span className="font-sans text-xs tracking-widest uppercase text-stone-400 block mb-2">{item.date}</span>
                 <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">{item.location}</h2>
-            </div>
-
-            <div className="mb-8 flex gap-4">
-                {slots.map(slotIndex => {
-                    const photo = dayPhotos ? dayPhotos[slotIndex] : null;
-                    return (
-                        <button
-                            key={slotIndex}
-                            onClick={() => onPhotoSlotClick(item.id, slotIndex)}
-                            className={`
-                                w-20 h-20 md:w-24 md:h-24 shrink-0 border relative group transition-all
-                                ${photo ? 'border-stone-200' : 'border-dashed border-stone-300 hover:border-amber-700 hover:bg-stone-50'}
-                            `}
-                        >
-                            {photo ? (
-                                <>
-                                    <img
-                                        src={initialPhotos.includes(photo) ? `./photos/${photo}` : `./journal/photos/${photo}`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <i data-lucide="refresh-cw" className="w-4 h-4 text-white"></i>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-stone-300 group-hover:text-amber-700">
-                                    <i data-lucide="plus" className="w-6 h-6"></i>
-                                </div>
-                            )}
-                        </button>
-                    );
-                })}
             </div>
 
             <div className="relative">
@@ -172,42 +105,25 @@ const ScrollyMapJournal = () => {
     const markersRef = useRef({});
 
     // Notes State
-    // Notes State
     const [journalNotes, setJournalNotes] = useState(() => {
         const saved = localStorage.getItem('japanTripNotesV2');
         return saved ? JSON.parse(saved) : {};
     });
 
-    // Journal Photos State: { [eventId]: [photo1, photo2, photo3] }
-    const [dailyPhotos, setDailyPhotos] = useState(() => {
-        const saved = localStorage.getItem('japanTripDailyPhotos');
-        return saved ? JSON.parse(saved) : {};
-    });
-
     // LOAD EXTERNAL DATA
     useEffect(() => {
+        // Load Text Only
         fetch('./journal/data.json')
             .then(res => res.json())
             .then(data => {
                 const loadedNotes = {};
-                const loadedPhotos = {};
-
                 Object.keys(data).forEach(key => {
                     if (data[key].text) loadedNotes[key] = data[key].text;
-                    if (data[key].photos) loadedPhotos[key] = data[key].photos;
                 });
-
-                // Merge with local storage (File takes precedence if exists, or maybe we just set it?)
-                // Strategy: If file has content, use it. If not, keep local? 
-                // User said "host... instead of existing on the website". Implies File > All.
                 setJournalNotes(prev => ({ ...prev, ...loadedNotes }));
-                setDailyPhotos(prev => ({ ...prev, ...loadedPhotos }));
             })
             .catch(err => console.log('No external journal data found', err));
     }, []);
-
-    // Photo Selector UI State
-    const [selectorState, setSelectorState] = useState({ isOpen: false, eventId: null, slotIndex: null });
 
     const routeBounds = useMemo(() => {
         const points = itineraryData.map(d => [d.lat, d.lng]);
@@ -292,34 +208,8 @@ const ScrollyMapJournal = () => {
         localStorage.setItem('japanTripNotesV2', JSON.stringify(newNotes));
     };
 
-    // Photo Handling
-    const handlePhotoSlotClick = (eventId, slotIndex) => {
-        setSelectorState({ isOpen: true, eventId, slotIndex });
-    };
-
-    const handlePhotoSelect = (photo) => {
-        const { eventId, slotIndex } = selectorState;
-        if (eventId === null || slotIndex === null) return;
-
-        const currentPhotos = dailyPhotos[eventId] || [null, null, null];
-        const newPhotos = [...currentPhotos];
-        newPhotos[slotIndex] = photo;
-
-        const updatedDailyPhotos = { ...dailyPhotos, [eventId]: newPhotos };
-        setDailyPhotos(updatedDailyPhotos);
-        localStorage.setItem('japanTripDailyPhotos', JSON.stringify(updatedDailyPhotos));
-
-        setSelectorState({ isOpen: false, eventId: null, slotIndex: null });
-    };
-
     return (
         <section className="relative">
-            <PhotoSelectorModal
-                isOpen={selectorState.isOpen}
-                onClose={() => setSelectorState({ ...selectorState, isOpen: false })}
-                onSelect={handlePhotoSelect}
-            />
-
             <div className="flex flex-col md:flex-row">
 
                 {/* Sticky Map - Left */}
@@ -353,8 +243,6 @@ const ScrollyMapJournal = () => {
                                 onActivate={handleActivate}
                                 userNotes={journalNotes}
                                 onNoteChange={handleNoteChange}
-                                dayPhotos={dailyPhotos[item.id] || [null, null, null]}
-                                onPhotoSlotClick={handlePhotoSlotClick}
                             />
                         ))}
 
