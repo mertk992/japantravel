@@ -73,7 +73,8 @@ const PhotoCard = ({ src, index }) => {
     );
 };
 
-const LogCard = ({ item, onActivate, userNotes, onNoteChange }) => {
+// Memoized LogCard to prevent re-renders of the entire list on every scroll trigger
+const LogCard = React.memo(({ item, onActivate, userNotes, onNoteChange }) => {
     return (
         <motion.div
             onViewportEnter={() => onActivate(item)}
@@ -97,12 +98,13 @@ const LogCard = ({ item, onActivate, userNotes, onNoteChange }) => {
             </div>
         </motion.div>
     );
-};
+});
 
 const ScrollyMapJournal = () => {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef({});
+    const previousActiveRef = useRef(null);
 
     // Notes State
     const [journalNotes, setJournalNotes] = useState(() => {
@@ -172,11 +174,19 @@ const ScrollyMapJournal = () => {
             // FIT BOUNDS ON LOAD
             map.fitBounds(routeBounds, { padding: [50, 50] });
 
+            // Fix for potential resizing issues
+            setTimeout(() => { map.invalidateSize(); }, 200);
+
             mapInstanceRef.current = map;
         }
     }, [routeBounds]);
 
     const handleActivate = (item) => {
+        if (!mapInstanceRef.current) return;
+        if (previousActiveRef.current === item.id) return; // Debounce/Prevent duplicate runs
+
+        previousActiveRef.current = item.id;
+
         if (mapInstanceRef.current) {
             // Highlight Marker
             Object.values(markersRef.current).forEach(m => {
@@ -189,9 +199,11 @@ const ScrollyMapJournal = () => {
             }
 
             // Fly To
+            // Stop current animation to ensure smooth transition
+            mapInstanceRef.current.stop();
             mapInstanceRef.current.flyTo([item.lat, item.lng], 12, {
-                duration: 2,
-                easeLinearity: 0.1
+                duration: 1.5,
+                easeLinearity: 0.25
             });
         }
     };
