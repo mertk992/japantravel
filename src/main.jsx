@@ -137,7 +137,7 @@ const LogCard = ({ item, onActivate, userNotes, onNoteChange, dayPhotos, onPhoto
                             {photo ? (
                                 <>
                                     <img
-                                        src={`./photos/${photo}`}
+                                        src={initialPhotos.includes(photo) ? `./photos/${photo}` : `./journal/photos/${photo}`}
                                         className="w-full h-full object-cover"
                                     />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -172,6 +172,7 @@ const ScrollyMapJournal = () => {
     const markersRef = useRef({});
 
     // Notes State
+    // Notes State
     const [journalNotes, setJournalNotes] = useState(() => {
         const saved = localStorage.getItem('japanTripNotesV2');
         return saved ? JSON.parse(saved) : {};
@@ -182,6 +183,28 @@ const ScrollyMapJournal = () => {
         const saved = localStorage.getItem('japanTripDailyPhotos');
         return saved ? JSON.parse(saved) : {};
     });
+
+    // LOAD EXTERNAL DATA
+    useEffect(() => {
+        fetch('./journal/data.json')
+            .then(res => res.json())
+            .then(data => {
+                const loadedNotes = {};
+                const loadedPhotos = {};
+
+                Object.keys(data).forEach(key => {
+                    if (data[key].text) loadedNotes[key] = data[key].text;
+                    if (data[key].photos) loadedPhotos[key] = data[key].photos;
+                });
+
+                // Merge with local storage (File takes precedence if exists, or maybe we just set it?)
+                // Strategy: If file has content, use it. If not, keep local? 
+                // User said "host... instead of existing on the website". Implies File > All.
+                setJournalNotes(prev => ({ ...prev, ...loadedNotes }));
+                setDailyPhotos(prev => ({ ...prev, ...loadedPhotos }));
+            })
+            .catch(err => console.log('No external journal data found', err));
+    }, []);
 
     // Photo Selector UI State
     const [selectorState, setSelectorState] = useState({ isOpen: false, eventId: null, slotIndex: null });
