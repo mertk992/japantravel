@@ -290,10 +290,12 @@ const ScrollyMapJournal = () => {
             if (innerDiv) {
                 // Emoji 🚅 usually points Left. If bearing is North (0), it needs to rotate 90 deg?
                 // Visual trial: 0 deg (North) -> Emoji needs to point UP. 
-                // If Emoji points LEFT by default. Rotate 90 deg -> Points DOWN?
-                // Let's assume standard alignment: Rotate bearing - 90 might make it point "forward".
-                // We will adjust based on standard CSS rotation logic.
-                innerDiv.style.transform = `rotate(${bearing - 90}deg)`;
+                // If Emoji points LEFT by default. Rotate 90 deg -> Points DOWN? 
+                // CORRECT LOGIC: 
+                // Default: Left (270). Target: North (0/360). Need +90.
+                // Default: Left (270). Target: East (90). Need +180.
+                // Formula: bearing + 90.
+                innerDiv.style.transform = `rotate(${bearing + 90}deg)`;
             }
 
             const startTime = performance.now();
