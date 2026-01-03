@@ -91,8 +91,23 @@ const PhotoCard = ({ src, index }) => {
     );
 };
 
-// Memoized LogCard to prevent re-renders of the entire list on every scroll trigger
+// Memoized LogCard with Carousel
 const LogCard = React.memo(({ item, onActivate, userNotes, folderPhotosList }) => {
+    const [photoIndex, setPhotoIndex] = useState(0);
+
+    const hasPhotos = folderPhotosList && folderPhotosList.length > 0;
+    const currentPhoto = hasPhotos ? folderPhotosList[photoIndex] : null;
+
+    const nextPhoto = (e) => {
+        e.stopPropagation();
+        setPhotoIndex((prev) => (prev + 1) % folderPhotosList.length);
+    };
+
+    const prevPhoto = (e) => {
+        e.stopPropagation();
+        setPhotoIndex((prev) => (prev - 1 + folderPhotosList.length) % folderPhotosList.length);
+    };
+
     return (
         <motion.div
             onViewportEnter={() => onActivate(item)}
@@ -106,18 +121,38 @@ const LogCard = React.memo(({ item, onActivate, userNotes, folderPhotosList }) =
                 <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">{item.location}</h2>
             </div>
 
-            {/* Folder Photos (Automated) */}
-            {folderPhotosList && folderPhotosList.length > 0 && (
-                <div className="mb-8 grid grid-cols-3 gap-3 md:gap-4">
-                    {folderPhotosList.slice(0, 3).map((photo, idx) => ( // Strict limit to 3 if user provides more
-                        <div key={idx} className="aspect-square relative overflow-hidden bg-stone-100 rounded-sm">
-                            <img
-                                src={photo}
-                                className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
-                                loading="lazy"
-                            />
-                        </div>
-                    ))}
+            {/* Photo Carousel */}
+            {hasPhotos && (
+                <div className="mb-8 relative w-full aspect-[4/3] bg-stone-100 rounded-sm overflow-hidden group">
+                    <img
+                        src={currentPhoto}
+                        key={currentPhoto} // Trigger fade/re-render
+                        className="w-full h-full object-cover transition-transform duration-500"
+                        loading="lazy"
+                    />
+
+                    {/* Navigation - Only show if > 1 photo */}
+                    {folderPhotosList.length > 1 && (
+                        <>
+                            <button
+                                onClick={prevPhoto}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-sm backdrop-blur opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                            </button>
+
+                            <button
+                                onClick={nextPhoto}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-stone-800 p-2 rounded-full shadow-sm backdrop-blur opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                            </button>
+
+                            <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-[10px] font-mono text-white tracking-widest">
+                                {photoIndex + 1} / {folderPhotosList.length}
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 
