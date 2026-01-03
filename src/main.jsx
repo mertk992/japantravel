@@ -338,10 +338,10 @@ const Hero = () => {
                 </motion.div>
             </div>
 
-            <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
+            <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
                 <img
                     src="./photos/DSC00748.JPG"
-                    className="w-full h-full object-cover filter grayscale"
+                    className="w-full h-full object-cover object-center filter grayscale contrast-125"
                 />
             </div>
         </header>
