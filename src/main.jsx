@@ -74,7 +74,7 @@ const PhotoCard = ({ src, index }) => {
 };
 
 // Memoized LogCard to prevent re-renders of the entire list on every scroll trigger
-const LogCard = React.memo(({ item, onActivate, userNotes, onNoteChange }) => {
+const LogCard = React.memo(({ item, onActivate, userNotes, folderPhotosList }) => {
     return (
         <motion.div
             onViewportEnter={() => onActivate(item)}
@@ -88,13 +88,25 @@ const LogCard = React.memo(({ item, onActivate, userNotes, onNoteChange }) => {
                 <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">{item.location}</h2>
             </div>
 
+            {/* Folder Photos (Automated) */}
+            {folderPhotosList && folderPhotosList.length > 0 && (
+                <div className="mb-8 grid grid-cols-3 gap-3 md:gap-4">
+                    {folderPhotosList.slice(0, 3).map((photo, idx) => ( // Strict limit to 3 if user provides more
+                        <div key={idx} className="aspect-square relative overflow-hidden bg-stone-100 rounded-sm">
+                            <img
+                                src={photo}
+                                className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
+                                loading="lazy"
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <div className="relative">
-                <textarea
-                    className="w-full h-32 resize-none bg-transparent border-none p-0 text-base md:text-lg font-serif text-stone-700 focus:ring-0 leading-relaxed placeholder:text-stone-300 placeholder:italic transition-all duration-300 focus:pl-4 focus:border-l-2 focus:border-amber-700"
-                    placeholder="Write your memories here..."
-                    value={userNotes[item.id] || ''}
-                    onChange={(e) => onNoteChange(item.id, e.target.value)}
-                />
+                <p className="font-serif text-lg text-stone-700 leading-loose whitespace-pre-wrap">
+                    {userNotes[item.id] || ''}
+                </p>
             </div>
         </motion.div>
     );
@@ -112,9 +124,12 @@ const ScrollyMapJournal = () => {
         return saved ? JSON.parse(saved) : {};
     });
 
+    // Folder Photos State (Automated)
+    const [folderPhotos, setFolderPhotos] = useState({});
+
     // LOAD EXTERNAL DATA
     useEffect(() => {
-        // Load Text Only
+        // Load Text
         fetch('./journal/data.json')
             .then(res => res.json())
             .then(data => {
@@ -125,6 +140,12 @@ const ScrollyMapJournal = () => {
                 setJournalNotes(prev => ({ ...prev, ...loadedNotes }));
             })
             .catch(err => console.log('No external journal data found', err));
+
+        // Load Automated Folder Photos
+        fetch('./journal/photo_map.json')
+            .then(res => res.json())
+            .then(data => setFolderPhotos(data))
+            .catch(err => console.log('No photo map found', err));
     }, []);
 
     const routeBounds = useMemo(() => {
@@ -254,7 +275,7 @@ const ScrollyMapJournal = () => {
                                 item={item}
                                 onActivate={handleActivate}
                                 userNotes={journalNotes}
-                                onNoteChange={handleNoteChange}
+                                folderPhotosList={folderPhotos[item.id]}
                             />
                         ))}
 
