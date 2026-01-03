@@ -40,6 +40,24 @@ const initialPhotos = [
 
 // --- Components ---
 
+// --- Helpers ---
+const toRad = (deg) => deg * Math.PI / 180;
+const toDeg = (rad) => rad * 180 / Math.PI;
+
+const getBearing = (startLat, startLng, destLat, destLng) => {
+    const startLatRad = toRad(startLat);
+    const startLngRad = toRad(startLng);
+    const destLatRad = toRad(destLat);
+    const destLngRad = toRad(destLng);
+
+    const y = Math.sin(destLngRad - startLngRad) * Math.cos(destLatRad);
+    const x = Math.cos(startLatRad) * Math.sin(destLatRad) -
+        Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(destLngRad - startLngRad);
+    let brng = Math.atan2(y, x);
+    brng = toDeg(brng);
+    return (brng + 360) % 360;
+};
+
 const GrainOverlay = () => (
     <div className="fixed inset-0 pointer-events-none z-50 opacity-40 mix-blend-multiply">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -117,6 +135,8 @@ const ScrollyMapJournal = () => {
     const mapInstanceRef = useRef(null);
     const markersRef = useRef({});
     const previousActiveRef = useRef(null);
+    const trainMarkerRef = useRef(null);
+    const animationRef = useRef(null);
 
     // Notes State
     const [journalNotes, setJournalNotes] = useState(() => {
@@ -174,6 +194,22 @@ const ScrollyMapJournal = () => {
             const points = itineraryData.map(d => [d.lat, d.lng]);
             L.polyline(points, { color: '#b45309', weight: 2, opacity: 0.3, dashArray: '5, 10' }).addTo(map);
 
+            // Shinkansen Icon
+            const trainIcon = L.divIcon({
+                className: 'train-icon-container',
+                html: `<div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: transform 0.1s linear;">🚅</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            // Initialize Train Marker at first point
+            const firstPoint = itineraryData[0];
+            const trainMarker = L.marker([firstPoint.lat, firstPoint.lng], {
+                icon: trainIcon,
+                zIndexOffset: 1000
+            }).addTo(map);
+            trainMarkerRef.current = trainMarker;
+
             // Add markers
             const uniqueLocations = Array.from(new Set(itineraryData.map(i => i.location)))
                 .map(loc => itineraryData.find(i => i.location === loc));
@@ -203,10 +239,15 @@ const ScrollyMapJournal = () => {
     }, [routeBounds]);
 
     const handleActivate = (item) => {
-        if (!mapInstanceRef.current) return;
-        if (previousActiveRef.current === item.id) return; // Debounce/Prevent duplicate runs
+        if (!mapInstanceRef.current || !trainMarkerRef.current) return;
+        if (previousActiveRef.current === item.id) return;
 
+        const prevId = previousActiveRef.current;
         previousActiveRef.current = item.id;
+
+        // Find previous item to start animation from. If no previous item (first load), default to current (no movement).
+        // note: prevId is just an ID, we need the object.
+        const prevItem = itineraryData.find(i => i.id === prevId) || item;
 
         if (mapInstanceRef.current) {
             // Highlight Marker
@@ -219,13 +260,63 @@ const ScrollyMapJournal = () => {
                 activeMarker.bringToFront();
             }
 
-            // Fly To
-            // Stop current animation to ensure smooth transition
+            // FLY TO (Camera) - Slower 4s duration
             mapInstanceRef.current.stop();
             mapInstanceRef.current.flyTo([item.lat, item.lng], 12, {
-                duration: 1.5,
+                duration: 4,
                 easeLinearity: 0.25
             });
+
+            // ANIMATE TRAIN
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+
+            const startLat = prevItem.lat;
+            const startLng = prevItem.lng;
+            const endLat = item.lat;
+            const endLng = item.lng;
+
+            // Calculate Bearing
+            const bearing = getBearing(startLat, startLng, endLat, endLng);
+
+            // Accessing the DOM element of the marker to rotate the emoji container
+            const iconEl = trainMarkerRef.current.getElement();
+            const innerDiv = iconEl ? iconEl.querySelector('div') : null;
+
+            // If staying in same place, don't animate geometry
+            if (startLat === endLat && startLng === endLng) {
+                return;
+            }
+
+            if (innerDiv) {
+                // Emoji 🚅 usually points Left. If bearing is North (0), it needs to rotate 90 deg?
+                // Visual trial: 0 deg (North) -> Emoji needs to point UP. 
+                // If Emoji points LEFT by default. Rotate 90 deg -> Points DOWN?
+                // Let's assume standard alignment: Rotate bearing - 90 might make it point "forward".
+                // We will adjust based on standard CSS rotation logic.
+                innerDiv.style.transform = `rotate(${bearing - 90}deg)`;
+            }
+
+            const startTime = performance.now();
+            const duration = 4000; // 4 seconds (matches flyTo)
+
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Ease function (easeInOutQuad / more pronounced)
+                const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const currentLat = startLat + (endLat - startLat) * ease;
+                const currentLng = startLng + (endLng - startLng) * ease;
+
+                trainMarkerRef.current.setLatLng([currentLat, currentLng]);
+
+                if (progress < 1) {
+                    animationRef.current = requestAnimationFrame(animate);
+                }
+            };
+
+            animationRef.current = requestAnimationFrame(animate);
         }
     };
 
