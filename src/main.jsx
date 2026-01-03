@@ -328,13 +328,13 @@ const Hero = () => {
 
     return (
         <header className="h-[60vh] relative overflow-hidden bg-stone-100 flex items-center justify-center">
-            <div className="text-center z-10 p-12 mix-blend-multiply">
+            <div className="text-center z-10 p-12">
                 <motion.div style={{ opacity }}>
-                    <p className="font-sans text-xs tracking-[0.5em] uppercase text-stone-500 mb-6">Visual Journal</p>
+                    <p className="font-sans text-xs tracking-[0.5em] uppercase text-stone-900 mb-6 font-bold">Visual Journal</p>
                     <h1 className="text-8xl md:text-[12rem] font-serif font-black text-stone-900 leading-none tracking-tighter">
                         Japan
                     </h1>
-                    <p className="font-serif italic text-stone-600 mt-6 text-xl">2025</p>
+                    <p className="font-serif italic text-stone-900 mt-6 text-xl">2025</p>
                 </motion.div>
             </div>
 
